@@ -1,13 +1,13 @@
 ---
 title: "Reproducible Research"
 author: "Macedo, Glener Diniz"
-date: "Saturday, July 18, 2015"
+date: "Saturday, August 15, 2015"
 output: html_document
 ---
 Reproducible Research: Peer Assessment 1
 
 ```{r}
-# Veifica se o arquivo .csv encontra no local
+# Verifies that the .csv file is in place
   if(!file.exists("activity.csv")){
     ## The data is in a .zip file format and has to be extracted in the working directory.
      if(!file.exists("activity.zip")){
@@ -74,11 +74,11 @@ median.spd <- median(total.steps,
                     )
 ggplot(by_day, aes(steps)) + 
 geom_histogram(fill = "steelblue1", 
-               colour = "black", 
+               colour = "blue", 
                breaks = c(0, 5000, 10000, 15000, 20000, 25000)
                ) +
-labs(y = expression("frequency")) + 
-labs(x = expression("total number of steps taken each day")) +
+labs(y = expression("Frequency")) + 
+labs(x = expression("Total number of steps taken each day")) +
 labs(title = expression("Figura 1"))
 
 ````
@@ -89,16 +89,17 @@ What is the average daily activity pattern?
 library(ggplot2)
 averages <- aggregate(x=list(steps=data$steps), 
                       by=list(interval=data$interval),
-                      FUN=mean, na.rm=TRUE)
+                      FUN=mean, na.rm=TRUE
+                     )
 ggplot(data=averages, 
        aes(x=interval, y=steps)
       ) +
-    geom_line() +
-    xlab("5-minute interval") +
-    ylab("average number of steps taken")
+geom_line(colour = "red", size = 0.75, type = "open") +
+xlab("Five-minute interval") +
+ylab("Average number of steps taken")
 
 ```
-On average across all the days in the dataset, the 5-minute interval contains the maximum number of steps?
+On average across all the days in the dataset, the five-minute interval contains the maximum number of steps?
 
 averages[which.max(averages$steps),]
 Imputing missing values
@@ -110,16 +111,21 @@ missing <- is.na(data$steps)
 # How many missing
 print(table(missing))
 ```
-All of the missing values are filled in with mean value for that 5-minute interval.
+All of the missing values are filled in with mean value for that five-minute interval.
 
-# Replace each missing value with the mean value of its 5-minute interval
+# Replace each missing value with the mean value of its five-minute interval
 ```{r}
-fill.value <- function(steps, interval) {
+fill.value <- function(steps, 
+                       interval
+                       ) {
     filled <- NA
     if (!is.na(steps))
         filled <- c(steps)
     else
-        filled <- (averages[averages$interval==interval, "steps"])
+        filled <- (averages[averages$interval==interval, 
+                            "steps"
+                           ]
+                  )
     return(filled)
 }
 filled.data <- data
@@ -138,8 +144,12 @@ total.steps <- tapply(filled.data$steps,
                      )
 qplot(total.steps, 
       binwidth=1000, 
-      xlab="total number of steps taken each day"
-     )
+      xlab="Total number of steps taken each day",
+      ylab=deparse(substitute(Count))
+     ) +
+geom_histogram(fill = "steelblue1", 
+               colour = "darkgreen", 
+               )
 mean(total.steps)
 median(total.steps)
 ```
@@ -152,23 +162,30 @@ First, let's find the day of the week for each measurement in the dataset. In th
 
 ```{r}
 weekday.or.weekend <- function(date) {
-    day <- weekdays(date)  #Note que abaixo esta os dias da semana do seu idioma
-    if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira"))
-        return("weekday")
-    else if (day %in% c("Saturday", "Sunday", "sábado", "domingo"))
-        return("weekend")
+    day <- weekdays(date)  
+    if (day %in% c("Monday", 
+                   "Tuesday", 
+                   "Wednesday", 
+                   "Thursday", 
+                   "Friday" 
+                  )
+       )
+        return("Weekday")
+    else if (day %in% c("Saturday", "Sunday"))
+        return("Weekend")
     else
-        stop("invalid date")
+        stop("Invalid Date")
 }
 filled.data$date <- as.Date(filled.data$date)
-filled.data$day <- sapply(filled.data$date, 
-                          FUN=weekday.or.weekend
-                         )
+filled.data$day  <- sapply(filled.data$date, 
+                           FUN=weekday.or.weekend
+                          )
 ```
 Now, let's make a panel plot containing plots of average number of steps taken on weekdays and weekends.
 
 ```{r}
-averages <- aggregate(steps ~ interval + day,
+averages <- aggregate(steps ~ interval + 
+                              day,
                       data=filled.data, 
                       mean
                      )
@@ -178,6 +195,6 @@ ggplot(averages,
       ) + 
        geom_line() + 
        facet_grid(day ~ .) +
-       xlab("5-minute interval") + 
-       ylab("Number of steps")
+       xlab("Five-minute interval") + 
+       ylab("Number of Steps")
 ```
